@@ -1,86 +1,99 @@
-# 🚀 MinimalVPN-Bot
+# 🚀 MinimalVPN-Bot | ربات فروشگاهی مینیمال VPN
 
-> "The art of engineering is in what you *don't* build." 
-> «هنر مهندسی، در نساختنِ زوائد است.»
+💡 *«هنر مهندسی، در نساختنِ زوائد است.»*
 
-**MinimalVPN-Bot** is an ultra-lightweight, MVP-focused Telegram Bot for selling VPN configurations. Designed with simplicity in mind, it skips heavy databases and complex panels, focusing purely on the core business flow: **Wallet Recharge, Buying Configs, and Customer Support.**
-
-این پروژه یک ربات تلگرامی فوق‌العاده سبک و مینیمال برای فروش کانفیگ‌های VPN است. این ربات با تمرکز بر اصل MVP (کمینه محصول پذیرفتنی)، از دیتابیس‌های سنگین و پیچیدگی‌های غیرضروری دوری کرده و فقط روی هسته اصلی کار تمرکز دارد: **شارژ کیف پول، خرید کانفیگ و پشتیبانی.**
+این پروژه یک ربات تلگرامی فوق‌العاده سبک، مینیمال و بهینه برای فروش اکانت‌های VPN (مانند V2Ray / Marzban / X-UI) است. هدف اصلی این ربات، ارائه یک تجربه کاربری (UX) ساده برای مشتری و مدیریت بی‌دردسر برای ادمین است، بدون اینکه درگیر پیچیدگی‌های غیرضروری دیتابیس‌های سنگین یا ساختارهای پیچیده شویم.
 
 ---
 
-## ✨ Features | ویژگی‌ها
+## ✨ ویژگی‌های کلیدی (Features)
 
-- 🛒 **Simple Purchasing Flow:** Users input desired GBs, cost is calculated ($$Total\_Cost = Volume \times Price$$), and deducted from the wallet.
-- 💳 **Wallet & Receipt System:** Manual wallet top-up via sending payment receipts to the admin for approval.
-- 🎧 **Built-in Support:** Forward-based ticketing system allowing admins to reply to users directly from the bot.
-- 🗄️ **Zero-Config Database:** Uses standard `sqlite3` stored right next to your code. No Docker or heavy SQL servers needed.
-- ⚡ **Modern Stack:** Built with `Python 3` and `aiogram 3.x`.
+1. **سیستم کیف پول و شارژ حساب (Wallet System):**
+   - کاربر مبلغ مورد نظر را وارد کرده و عکس فیش واریزی را ارسال می‌کند.
+   - فیش مستقیماً برای ادمین ارسال می‌شود (همراه با اطلاعات کامل خریدار شامل آیدی، یوزرنیم، مبلغ، تاریخ و ساعت).
+   - ادمین با فشردن دکمه شیشه‌ای (Inline Button) `✅ تایید` یا `❌ رد کردن`، مستقیماً کیف پول کاربر را مدیریت می‌کند.
+
+2. **خرید مستقیم و محاسبه خودکار (Direct Purchase):**
+   - کاربر تنها با وارد کردن حجم مورد نیاز خود (به گیگابایت) درخواست خرید می‌دهد.
+   - ربات هزینه را بر اساس فرمول $Total\_Cost = Volume \times Price$ محاسبه می‌کند.
+   - در صورت کافی بودن موجودی، مبلغ کسر شده و کانفیگ تحویل داده می‌شود؛ در غیر این صورت به بخش شارژ هدایت می‌شود.
+
+3. **اتصال مستقیم به API پنل (Direct Panel Integration):**
+   - در صورت موفقیت‌آمیز بودن تراکنش، ربات در همان لحظه از طریق `aiohttp` به پنل (X-UI/Marzban) متصل شده و کانفیگ اختصاصی را تولید و تحویل می‌دهد.
+
+4. **سیستم پشتیبانی داخلی (Built-in Support):**
+   - پیام‌های کاربر مستقیماً برای ادمین فوروارد می‌شود.
+   - ادمین تنها با **Reply** کردن روی پیام فوروارد شده، پاسخ را به کاربر می‌رساند.
+
+5. **پایگاه داده سبک (SQLite Database):**
+   - تمامی اطلاعات کاربران (موجودی و آیدی) درون یک فایل ساده `shop.db` در کنار کد ذخیره می‌شود.
 
 ---
 
-## 🛠️ Tech Stack | ابزارهای استفاده شده
+## 🛠 پیش‌نیازها (Prerequisites)
 
-- **Language:** Python 3.9+
-- **Framework:** [aiogram 3.x](https://docs.aiogram.dev/en/latest/) (Asynchronous Telegram Bot API)
-- **Database:** SQLite (Built-in)
-- **Architecture:** FSM (Finite State Machine) for handling user flows.
+برای اجرای این ربات به موارد زیر نیاز دارید:
+- **پایتون (Python):** نسخه 3.9 یا بالاتر نصب باشد.
+- **توکن ربات (Bot Token):** از [@BotFather](https://t.me/BotFather) دریافت شده باشد.
+- **آیدی ادمین (Admin ID):** شناسه عددی تلگرام شما (از [@userinfobot](https://t.me/userinfobot) بگیرید).
+- **دسترسی API پنل:** اطلاعات ورود به پنل VPN شما (IP، پورت، یوزر و پسورد پنل).
 
 ---
 
-## ⚙️ Installation & Setup | نصب و راه‌اندازی
+## ⚙️ آموزش قدم‌به‌قدم راه‌اندازی (Step-by-Step Installation)
 
-### 1. Clone the repository
-ابتدا پروژه را کلون کنید:
+از آنجا که این پروژه مختص توسعه‌دهنده اصلی است، مراحل توسعه و راه‌اندازی روی سرور یا سیستم شخصی به شرح زیر است:
+
+### قدم اول: دریافت کدها
+پوشه پروژه را در سیستم یا سرور خود قرار دهید و وارد مسیر پروژه شوید:
 ```bash
-git clone https://github.com/YourUsername/MinimalVPN-Bot.git
-cd MinimalVPN-Bot
+cd path/to/MinimalVPN-Bot
 
-### 2. Install dependencies
-کتابخانه‌های مورد نیاز را نصب کنید:
+### قدم دوم: ساخت محیط مجازی (Virtual Environment)
+برای جلوگیری از تداخل پکیج‌ها، همیشه از `venv` استفاده کنید:
 bash
-pip install aiogram
+python -m venv venv
+فعال‌سازی محیط مجازی:
+- **در ویندوز:** `venv\Scripts\activate`
+- **در لینوکس/مک:** `source venv/bin/activate`
 
-### 3. Configuration
-فایل `bot.py` را باز کرده و متغیرهای زیر را در ابتدای کد با اطلاعات خود جایگزین کنید:
+### قدم سوم: نصب نیازمندی‌ها (Dependencies)
+کتابخانه‌های مورد نیاز (`aiogram` برای ربات و `aiohttp` برای درخواست‌های وب) را نصب کنید:
+bash
+pip install aiogram aiohttp
+
+### قدم چهارم: تنظیم متغیرهای اصلی (Configuration)
+فایل اصلی ربات (مثلاً `bot.py`) را با یک ویرایشگر باز کنید و متغیرهای زیر را در ابتدای کد با اطلاعات خود جایگزین کنید:
 python
-BOT_TOKEN = "YOUR_BOT_TOKEN_HERE"  # توکن ربات شما از BotFather
-ADMIN_ID = 123456789             # آیدی عددی تلگرام ادمین (برای دریافت رسیدها و پیام‌ها)
-PRICE_PER_GB = 5000              # قیمت هر گیگابایت به تومان
+BOT_TOKEN = "YOUR_BOT_TOKEN_HERE"
+ADMIN_ID = 123456789  # آیدی عددی شما
+PRICE_PER_GB = 5000   # قیمت هر گیگابایت به تومان
 
-### 4. Run the bot
-ربات را اجرا کنید. دیتابیس `shop.db` به صورت خودکار در اولین اجرا ساخته می‌شود:
+# تنظیمات اتصال به پنل VPN
+PANEL_URL = "http://YOUR_PANEL_IP:PORT"
+PANEL_USER = "admin"
+PANEL_PASS = "admin_password"
+
+### قدم پنجم: اجرای ربات
+اکنون می‌توانید ربات را استارت بزنید:
 bash
 python bot.py
+> **نکته:** در اولین اجرا، فایل پایگاه داده `shop.db` به صورت خودکار در کنار کد شما ساخته می‌شود.
 
 ---
 
-## 🗂️ Database Structure | ساختار دیتابیس
+## 🗄 مدیریت دیتابیس (Database Management)
 
-The bot automatically creates a `shop.db` file with two simple tables:
-دیتابیس دارای دو جدول بسیار ساده است:
-
-1. **`Users` Table:**
-   - `user_id` (Primary Key)
-   - `wallet_balance` (Integer, Default: 0)
-
-2. **`Configs` Table:**
-   - `id` (Primary Key, AutoIncrement)
-   - `config_string` (Text - The actual VPN config data)
-   - `is_sold` (Boolean/Integer, Default: 0)
-
-*Note: You can manually insert your generated configs into the `Configs` table using any SQLite viewer (like DB Browser for SQLite).*
-*نکته: شما می‌توانید کانفیگ‌های تولید شده خود را با استفاده از نرم‌افزارهایی مثل DB Browser for SQLite به صورت دستی وارد جدول `Configs` کنید.*
+- تمام اطلاعات مالی و آیدی کاربران در فایل `shop.db` ذخیره می‌شود.
+- برای مشاهده یا ویرایش دستی اطلاعات (مثل تغییر دستی موجودی یک کاربر)، می‌توانید از نرم‌افزار رایگان **DB Browser for SQLite** استفاده کنید. کافیست فایل `shop.db` را در این نرم‌افزار باز کنید.
 
 ---
 
-## 🤝 Contributing | مشارکت
+## 🔒 لایسنس و حق تکثیر (License & Copyright)
 
-Contributions, issues, and feature requests are welcome! Keep in mind the philosophy of this project: **Keep it minimal.** 
-از مشارکت شما استقبال می‌شود! فقط لطفاً فلسفه پروژه را در نظر داشته باشید: **حفظ سادگی و مینیمال بودن.**
+**Proprietary  | کاملاً انحصاری **
 
-## 📜 License
-This project is licensed under the MIT License.
+All rights reserved. This project, its architecture, and source code are strictly confidential and proprietary. Unauthorized copying, distribution, modification, or use of this project, via any medium, is strictly prohibited. This project is solely developed and maintained by the author.
 
-
+تمامی حقوق این پروژه محفوظ است. این کد، ساختار معماری و منطق آن کاملاً انحصاری بوده و هرگونه کپی‌برداری، توزیع، تغییر یا استفاده تجاری و غیرتجاری از آن، از طریق هر رسانه‌ای، بدون اجازه مستقیم توسعه‌دهنده اکیداً ممنوع است. این پروژه تنها توسط مالک آن توسعه و نگهداری می‌شود.
 
