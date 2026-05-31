@@ -23,7 +23,6 @@ dp = Dispatcher()
 def init_db():
     conn = sqlite3.connect('shop.db')
     cursor = conn.cursor()
-    # جدول کاربران فقط برای کیف پول (جدول کانفیگ حذف شد چون مستقیم به پنل وصل می‌شویم)
     cursor.execute('''CREATE TABLE IF NOT EXISTS Users 
                       (user_id INTEGER PRIMARY KEY, wallet_balance INTEGER DEFAULT 0)''')
     conn.commit()
