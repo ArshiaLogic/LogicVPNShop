@@ -11,8 +11,8 @@ from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import StatesGroup, State
 
 # ================= Configuration =================
-BOT_TOKEN = "8958097435:AAHjxfyjZvs8e39CbTUcSVm9sKFHOnBxKa0"
-ADMIN_ID = 1462396937  # آیدی عددی تلگرام ادمین را اینجا قرار دهید
+BOT_TOKEN = "your token"
+ADMIN_ID = 123456789  # آیدی عددی تلگرام ادمین را اینجا قرار دهید
 PRICE_PER_GB = 15000  # قیمت هر گیگابایت به تومان
 
 logging.basicConfig(level=logging.INFO)
