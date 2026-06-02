@@ -11,9 +11,14 @@ from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import StatesGroup, State
 
 # ================= Configuration =================
-BOT_TOKEN = "your token"
+BOT_TOKEN = "your_bot_token"
 ADMIN_ID = 123456789  # آیدی عددی تلگرام ادمین را اینجا قرار دهید
 PRICE_PER_GB = 15000  # قیمت هر گیگابایت به تومان
+
+# ================= Panel Configuration (Marzban) =================
+PANEL_URL = "https://sub.your-domain.com"  # آدرس پنل مرزبان شما (بدون اسلش در انتهای آن)
+PANEL_USERNAME = "your_admin_username"     # نام کاربری ادمین پنل
+PANEL_PASSWORD = "your_admin_password"     # رمز عبور ادمین پنل
 
 logging.basicConfig(level=logging.INFO)
 bot = Bot(token=BOT_TOKEN)
@@ -44,21 +49,71 @@ def update_user_balance(user_id, amount):
     conn.close()
 
 # ================= API Connection (Panel) =================
+async def get_panel_token() -> str:
+    """دریافت توکن احراز هویت (Access Token) از پنل مرزبان"""
+    async with aiohttp.ClientSession() as session:
+        data = {"username": PANEL_USERNAME, "password": PANEL_PASSWORD}
+        async with session.post(f"{PANEL_URL}/api/admin/token", data=data) as resp:
+            if resp.status == 200:
+                json_resp = await resp.json()
+                return json_resp.get("access_token")
+            else:
+                error_msg = await resp.text()
+                logging.error(f"Login Error: {error_msg}")
+                raise Exception(f"خطا در ورود به پنل. کد وضعیت: {resp.status}")
+
 async def create_vpn_config(user_id: int, gb_amount: int) -> str:
     """
-    این تابع مستقیم به پنل (مثل X-UI یا Marzban) متصل می‌شود و کانفیگ می‌سازد.
-    در حال حاضر به صورت آزمایشی (Mock) یک کانفیگ فیک برمی‌گرداند.
-    برای اتصال واقعی، کدهای درخواست http را در اینجا جایگزین کنید.
+    اتصال واقعی به پنل مرزبان برای ساخت کاربر جدید و دریافت لینک کانفیگ/سابسکریپشن
     """
-    # bytes_limit = gb_amount * 1024 * 1024 * 1024  # تبدیل به بایت برای پنل
-    
-    # شبیه‌سازی تاخیر ساخت کانفیگ در سرور
-    await asyncio.sleep(2) 
-    
-    config_name = f"user_{user_id}_{gb_amount}GB_{str(uuid.uuid4())[:4]}"
-    fake_config_link = f"vless://{uuid.uuid4()}@your-server-ip:443?type=tcp&security=tls#tg_{config_name}"
-    
-    return fake_config_link
+    try:
+        # ۱. دریافت توکن
+        token = await get_panel_token()
+        
+        # ۲. آماده‌سازی اطلاعات کاربر جدید
+        bytes_limit = gb_amount * 1073741824  # تبدیل گیگابایت به بایت
+        username = f"user_{user_id}_{uuid.uuid4().hex[:4]}"  
+        
+        payload = {
+            "username": username,
+            "data_limit": bytes_limit,
+            "expire": 0,  
+            "proxies": {"vless": {}, "vmess": {}},  
+            "note": f"Telegram ID: {user_id}" 
+        }
+        
+        headers = {
+            "Authorization": f"Bearer {token}",
+            "Content-Type": "application/json",
+            "accept": "application/json"
+        }
+        
+        # ۳. ارسال درخواست ساخت کاربر به پنل
+        async with aiohttp.ClientSession() as session:
+            async with session.post(f"{PANEL_URL}/api/user", json=payload, headers=headers) as resp:
+                if resp.status == 200:
+                    data = await resp.json()
+                    
+                    sub_url = data.get("subscription_url", "")
+                    if sub_url:
+                        return f"{PANEL_URL}{sub_url}"
+                    
+                    links = data.get("links", [])
+                    if links:
+                        return "\n\n".join(links)
+                        
+                    return "کاربر ساخته شد اما لینکی دریافت نشد. لطفا تنظیمات پنل را بررسی کنید."
+                    
+                elif resp.status == 409:
+                    raise Exception("این نام کاربری از قبل در پنل وجود دارد.")
+                else:
+                    error_text = await resp.text()
+                    logging.error(f"Create User Error: {error_text}")
+                    raise Exception(f"خطا در ساخت کاربر. کد: {resp.status}")
+                    
+    except Exception as e:
+        logging.error(f"API Error in create_vpn_config: {str(e)}")
+        raise e
 
 # ================= FSM States =================
 class BuyVPN(StatesGroup):
@@ -117,7 +172,7 @@ async def process_buy_vpn(message: Message, state: FSMContext):
             # ساخت کانفیگ مستقیم از پنل
             new_config = await create_vpn_config(message.from_user.id, gb_amount)
             await loading_msg.delete()
-            await message.answer(f"🎉 کانفیگ شما با موفقیت ساخته شد!\n\nحجم: {gb_amount} گیگابایت\nمبلغ کسر شده: {total_price} تومان\n\nکانفیگ شما:\n`{new_config}`", parse_mode="Markdown")
+            await message.answer(f"🎉 کانفیگ شما با موفقیت ساخته شد!\n\nحجم: {gb_amount} گیگابایت\nمبلغ کسر شده: {total_price} تومان\n\nلینک سابسکریپشن/کانفیگ شما:\n`{new_config}`", parse_mode="Markdown")
         except Exception as e:
             # برگشت پول در صورت بروز خطای سرور
             update_user_balance(message.from_user.id, total_price)
